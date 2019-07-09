@@ -279,7 +279,7 @@ arma::mat QPADMslackpara(double eps, arma::vec y, arma::mat x, arma::vec betatru
     
   }  
   
-  final(0) = sum(abs(beta-betatrue));;
+  final(0) = sum(abs(beta-betatrue));
   final(1) = time;
   final(2) = iteration;
   return final;
