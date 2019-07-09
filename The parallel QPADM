@@ -83,7 +83,7 @@ double checkloss(arma::vec u, double tau){
 
 //The parallel QPADM
 // [[Rcpp::export]]
-arma::mat qpadmdisCPP(double eps,arma::mat xr,arma::vec yr,int iter,int M,double ta,double rhor,double lambdar,double a,std::string penalty,arma::vec bt){
+arma::mat QPADMpara(double eps,arma::mat xr,arma::vec yr,int iter,int M,double ta,double rhor,double lambdar,double a,std::string penalty,arma::vec bt){
   
   int maxit=(iter);
   double tau=(ta),rho=(rhor),lambda=(lambdar);
