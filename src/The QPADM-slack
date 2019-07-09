@@ -100,7 +100,7 @@ double minf(double a, double b){
 
 //The QPADM-slack
 //[[Rcpp::export]]
-arma::mat slackxietaCPP(double eps, arma::vec y, arma::mat x, double tau, double lambda, double a, double pho, String funname, int maxstep){
+arma::mat QPADMslack(double eps, arma::vec y, arma::mat x, double tau, double lambda, double a, double pho, String funname, int maxstep){
   int n = x.n_rows, p = x.n_cols;
   arma::vec betaini(p, fill::zeros), zini(p, fill::zeros), uini(p, fill::zeros);
   arma::vec xiini(n, fill::zeros), etaini(n, fill::zeros), vini(n, fill::zeros);
