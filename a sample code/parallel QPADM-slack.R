@@ -1,4 +1,5 @@
 # Penalized quantile regression Using the Slack Variable Representation. This is a parallel implementation. 
+# The QPADMslackpara() function is written using Rcpp. To use the code, we should install the R package, "Rcpp", first.
 # QPADMslackpara(eps, y, x, betatrue, tau, lambda, a, pho, K, funname, maxstep)
 # "eps" The terminate condition
 # "y" The response vector
