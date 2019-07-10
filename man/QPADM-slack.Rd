@@ -44,4 +44,5 @@ QPADMslack_scad = QPADMslack(1e-03, Y, X, 0.3, 15, 3.7, 1, "scad", 500)
 beta_qadmm_scad3 = QPADMslack_scad[1:p]
 step = QPADMslack_scad[p+1,]
 time = QPADMslack_scad[p+2,]
+
 }
