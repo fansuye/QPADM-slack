@@ -12,7 +12,7 @@ arma::vec shrinkcpp(arma::vec u, arma::vec v){
   return w;
 }
 
-//The derivative of the penalty term
+//The first order derivative of the penalty term
 //[[Rcpp::export]]
 arma::vec deriv(arma::vec beta, double a, double lambda, std::string penalty){
   int p = beta.n_elem;
@@ -110,14 +110,12 @@ arma::mat QPADMpara(double eps,arma::mat xr,arma::vec yr,int iter,int M,double t
   double distance = 1;
   double lossold = 0, loss = 0;
   if(penalty == "mcp"){
-    lossold = checkloss(rini,tau)+gmcp2(betaini, lambda, a);
+    lossold = checkloss(rini,tau)/n+gmcp2(betaini, lambda, a);
   }
   else{
-    lossold = checkloss(rini,tau)+gscad2(betaini, lambda, a);
+    lossold = checkloss(rini,tau)/n+gscad2(betaini, lambda, a);
   }
-  if(tau==0.5){
-    eps=eps/M*100;
-  }
+  
   while((distance>eps)&&(iteration<maxit)){
   //while(iteration<maxit){
     beta_avgini=mean(betaiini,1);
@@ -149,10 +147,10 @@ arma::mat QPADMpara(double eps,arma::mat xr,arma::vec yr,int iter,int M,double t
     max_map = map(map.index_max());
     time = time+max_map;
     if(penalty == "mcp"){
-      loss = checkloss(r,tau)+gmcp2(beta, lambda, a);
+      loss = checkloss(r,tau)/n+gmcp2(beta, lambda, a);
     }
     else{
-      loss = checkloss(r,tau)+gscad2(beta, lambda, a);
+      loss = checkloss(r,tau)/n+gscad2(beta, lambda, a);
     }
     distance = abs(lossold-loss);
     traceloss(iteration) = lossold;
