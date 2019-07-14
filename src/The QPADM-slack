@@ -90,7 +90,7 @@ double minf(double a, double b){
 
 //The QPADM-slack
 //[[Rcpp::export]]
-arma::mat QPADMslack(double eps, arma::vec y, arma::mat x, double tau, double lambda, double a, double pho, String funname, int maxstep){
+arma::mat QPADMslack(double eps, arma::vec y, arma::mat x, double tau, double lambda, double a, double pho, String funname, int maxstep, double cutoff){
   int n = x.n_rows, p = x.n_cols;
   arma::vec betaini(p, fill::zeros), zini(p, fill::zeros), uini(p, fill::zeros);
   arma::vec xiini(n, fill::zeros), etaini(n, fill::zeros), vini(n, fill::zeros);
@@ -182,6 +182,10 @@ arma::mat QPADMslack(double eps, arma::vec y, arma::mat x, double tau, double la
     xiini = xi, etaini = eta, vini=v; 
     iteration = iteration+1;
   } 
+  for(int j =1;j<p;j++){
+    if(beta(j)<cutoff)
+      beta(j)=0;
+  }
   arma::vec betafinal(p+2);
   betafinal.subvec(0, p-1)= beta;
   betafinal(p) = iteration;
