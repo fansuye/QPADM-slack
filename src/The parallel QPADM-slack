@@ -1,4 +1,4 @@
-// The parallel QPADM-slack 
+//The parallel QPADM-slack 
 #include <RcppArmadillo.h>
 #include <math.h>
 #include <chrono>
@@ -8,7 +8,7 @@ using namespace arma;
 using namespace std;
 
 //Covariance matrix
-//[[Rcpp::depends(RcppArmadillo)]]
+//[[Rcpp::export]]
 arma::mat gcov(int p, double rho){
   arma::mat cov(p, p, fill::eye);
   for(int i = 0; i < p; i++){
@@ -70,37 +70,20 @@ double gmcp2(arma::vec z, double lambda, double a){
   return sum(pz);
 }
 
-//maxfunction
-double maxf(double a, double b){
-  if(a>=b)
-    return a;
-  else
-    return b;
-}
-
-//minfunction
-double minf(double a, double b){
-  if(a<b)
-    return a;
-  else
-    return b;
-}
-
 //The parallel QPADM-slack
-arma::mat QPADMslackpara(double eps, arma::vec y, arma::mat x, arma::vec betatrue, double tau, double lambda, double a, double pho, int K, String funname, int maxstep){  
-  int n = x.n_rows, p = x.n_cols, nk = n/K;
-  eps = eps*K;
-  arma::mat zini(p, K, fill::zeros), uini(p, K, fill::zeros);
-  arma::vec xiini(n, fill::zeros), etaini(n, fill::zeros), vini(n, fill::zeros);
-  arma::vec betaini(p, fill::zeros);
-  arma::mat z(p, K, fill::zeros), u(p, K, fill::zeros);
-  arma::vec xi(n, fill::zeros), eta(n, fill::zeros), v(n, fill::zeros);
-  arma::vec beta(p, fill::zeros);
-  arma::vec zinimean = mean(zini,1);
-  arma::vec uinimean = mean(uini,1);
+//[[Rcpp::export]]
+arma::mat QPADMslackparaCPP(arma::vec y, arma::mat x, arma::vec betatrue, double tau, double lambda, double a, double pho, int K, String funname, int maxstep, bool intercept){  
+  int n = x.n_rows, nk = n/K;
+  if(intercept){
+    x.insert_cols(0, arma::ones(n));
+  }
+  int p = x.n_cols;
+  arma::mat zini(p, K, fill::zeros), uini(p, K, fill::zeros), z(p, K, fill::zeros), u(p, K, fill::zeros);
+  arma::vec xiini(n, fill::zeros), etaini(n, fill::zeros), vini(n, fill::zeros), betaini(p, fill::zeros);
+  arma::vec xi(n, fill::zeros), eta(n, fill::zeros), v(n, fill::zeros), beta(p, fill::zeros);
+  arma::vec zinimean = mean(zini,1), uinimean = mean(uini,1);
   arma::vec yx = y;
   arma::vec final(3, fill::zeros);
-  arma::vec traceloss(maxstep, fill::zeros);
   double max_prep =0, time_reduce = 0, max_map = 0, time = 0;
   arma::vec map(K, fill::zeros);
   double distance = 1, lossold = 0, loss = 0; 
@@ -124,9 +107,7 @@ arma::mat QPADMslackpara(double eps, arma::vec y, arma::mat x, arma::vec betatru
   }
   time = time + max_prep;
   int iteration = 0;
-
-  while((distance > eps)&&(iteration < maxstep)){
-  //while((iteration < maxstep)){
+  while(iteration < maxstep){
     zinimean = mean(zini,1);
     uinimean = mean(uini,1);
     auto start_reduce = std::chrono::high_resolution_clock::now();
@@ -134,8 +115,8 @@ arma::mat QPADMslackpara(double eps, arma::vec y, arma::mat x, arma::vec betatru
       for(int j=0;j<p;j++){
         double phi = zinimean(j)+uinimean(j)/pho;
         arma::vec xx(3, fill::zeros);
-        xx(0) = sign(phi)*minf(a*lambda, maxf(0, a*(pho*K*abs(phi)-lambda)/(pho*K*a-1)));
-        xx(1) = sign(phi)*maxf(a*lambda, abs(phi));
+        xx(0) = sign(phi)*min(a*lambda, max(0.0, a*(pho*K*abs(phi)-lambda)/(pho*K*a-1)));
+        xx(1) = sign(phi)*max(a*lambda, abs(phi));
         arma::vec h(3, fill::zeros);
         for(int i = 0; i < 3; i++){
           h(i) = 0.5*(xx(i)-phi)*(xx(i)-phi)+gmcp(xx(i), lambda, a)/(pho*K); 
@@ -147,9 +128,9 @@ arma::mat QPADMslackpara(double eps, arma::vec y, arma::mat x, arma::vec betatru
       for(int j = 0; j < p; j++){
         double phi = zinimean(j)+uinimean(j)/pho;
         arma::vec xx(4, fill::zeros);
-        xx(0) = sign(phi)*minf(lambda, maxf(0, abs(phi)-lambda/(pho*K)));
-        xx(1) = sign(phi)*minf(a*lambda, maxf(lambda, (pho*K*(a-1)*abs(phi)-a*lambda)/(pho*K*(a-1)-1)));
-        xx(2) = sign(phi)*maxf(a*lambda, abs(phi));
+        xx(0) = sign(phi)*min(lambda, max(0.0, abs(phi)-lambda/(pho*K)));
+        xx(1) = sign(phi)*min(a*lambda, max(lambda, (pho*K*(a-1)*abs(phi)-a*lambda)/(pho*K*(a-1)-1)));
+        xx(2) = sign(phi)*max(a*lambda, abs(phi));
         arma::vec h(4, fill::zeros);
         for(int i = 0; i < 4; i++){
           h(i) = 0.5*(xx(i)-phi)*(xx(i)-phi)+gscad(xx(i), lambda, a)/(pho*K); 
@@ -193,15 +174,11 @@ arma::mat QPADMslackpara(double eps, arma::vec y, arma::mat x, arma::vec betatru
       loss = tau*accu(xi)+(1-tau)*accu(eta)+gscad2(beta, lambda, a);
     }
     distance = abs(loss-lossold);
-    traceloss(iteration) = lossold;
-    lossold = loss;
-    betaini = beta, zini = z, uini = u;
-    xiini = xi, etaini = eta, vini=v;
+    lossold = loss, betaini = beta, zini = z, uini = u, xiini = xi, etaini = eta, vini=v;
     iteration = iteration+1;
   }    
   final(0) = sum(abs(beta-betatrue));
   final(1) = time;
   final(2) = iteration;
   return final;
-  //return traceloss;
 }
