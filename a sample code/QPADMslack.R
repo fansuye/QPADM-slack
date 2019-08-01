@@ -1,4 +1,4 @@
-# Penalized quantile regression Using the Slack Variable Representation. This is a non-parallel implementation in R.
+# Penalized quantile regression using the slack variable representation. This is a non-parallel implementation in R.
 # The QPADMslack() function is implemented using Rcpp. To use the code, we should install the R package, "Rcpp", first.
 # QPADMslackCPP(y, x, tau, lambda, a, pho, funname, maxstep, eps, intercept). 
 # "y" The response vector
@@ -9,7 +9,7 @@
 # "pho" The augmentation parameter for the ADMM
 # "funname" Name of the penalty to use, currently support ("scad", "mcp")
 # "maxstep" Maximum number of iterations allowed
-# "eps" The terminate condition
+# "eps" The tolerance parameter for convergence
 # "intercept" Whether to include the intercept into the model
 # value: The coefficient estimation of the linear quantile regression model, the number of iterations and the running time
 n = 30000 
