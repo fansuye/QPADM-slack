@@ -74,30 +74,63 @@ arma::mat QPADMslackparaCPP(arma::vec y, arma::mat x, arma::vec betatrue, double
     uinimean = mean(uini,1);
     auto start_reduce = std::chrono::high_resolution_clock::now();
     if(funname == "mcp"){
-      for(int j=0;j<p;j++){
-        double phi = zinimean(j)+uinimean(j)/pho;
-        arma::vec xx(3, fill::zeros);
-        xx(0) = sign(phi)*min(a*lambda, max(0.0, a*(pho*K*abs(phi)-lambda)/(pho*K*a-1)));
-        xx(1) = sign(phi)*max(a*lambda, abs(phi));
-        arma::vec h(3, fill::zeros);
-        for(int i = 0; i < 3; i++){
-          h(i) = 0.5*(xx(i)-phi)*(xx(i)-phi)+gmcp(xx(i), lambda, a)/(pho*K); 
+      if(intercept){
+        beta(0) = zmean(0)+umean(0)/pho;
+        for(int j=1;j<p;j++){
+          double phi = zmean(j)+umean(j)/pho;
+          arma::vec xx(3, fill::zeros);
+          xx(0) = sign(phi)*min(a*lambda, max(0.0, a*(pho*K*abs(phi)-lambda)/(pho*K*a-1)));
+          xx(1) = sign(phi)*max(a*lambda, abs(phi));
+          arma::vec h(3, fill::zeros);
+          for(int i = 0; i < 3; i++){
+            h(i) = 0.5*(xx(i)-phi)*(xx(i)-phi)+gmcp(xx(i), lambda, a)/(pho*K); 
+          }
+          beta(j) = xx(h.index_min());
         }
-        beta(j) = xx(h.index_min());
+      }
+      else{
+        for(int j=0;j<p;j++){
+          double phi = zmean(j)+umean(j)/pho;
+          arma::vec xx(3, fill::zeros);
+          xx(0) = sign(phi)*min(a*lambda, max(0.0, a*(pho*K*abs(phi)-lambda)/(pho*K*a-1)));
+          xx(1) = sign(phi)*max(a*lambda, abs(phi));
+          arma::vec h(3, fill::zeros);
+          for(int i = 0; i < 3; i++){
+            h(i) = 0.5*(xx(i)-phi)*(xx(i)-phi)+gmcp(xx(i), lambda, a)/(pho*K); 
+          }
+          beta(j) = xx(h.index_min());
+        }
       }
     }
     else{
-      for(int j = 0; j < p; j++){
-        double phi = zinimean(j)+uinimean(j)/pho;
-        arma::vec xx(4, fill::zeros);
-        xx(0) = sign(phi)*min(lambda, max(0.0, abs(phi)-lambda/(pho*K)));
-        xx(1) = sign(phi)*min(a*lambda, max(lambda, (pho*K*(a-1)*abs(phi)-a*lambda)/(pho*K*(a-1)-1)));
-        xx(2) = sign(phi)*max(a*lambda, abs(phi));
-        arma::vec h(4, fill::zeros);
-        for(int i = 0; i < 4; i++){
-          h(i) = 0.5*(xx(i)-phi)*(xx(i)-phi)+gscad(xx(i), lambda, a)/(pho*K); 
+     if(intercept){
+        beta(0) = zmean(0)+umean(0)/pho;
+        for(int j = 1; j < p; j++){
+          double phi = zmean(j)+umean(j)/pho;
+          arma::vec xx(4, fill::zeros);
+          xx(0) = sign(phi)*min(lambda, max(0.0, abs(phi)-lambda/(pho*K)));
+          xx(1) = sign(phi)*min(a*lambda, max(lambda, (pho*K*(a-1)*abs(phi)-a*lambda)/(pho*K*(a-1)-1)));
+          xx(2) = sign(phi)*max(a*lambda, abs(phi));
+          arma::vec h(4, fill::zeros);
+          for(int i = 0; i < 4; i++){
+            h(i) = 0.5*(xx(i)-phi)*(xx(i)-phi)+gscad(xx(i), lambda, a)/(pho*K); 
+          }
+          beta(j) = xx(h.index_min());
         }
-        beta(j) = xx(h.index_min());
+      }
+      else{
+        for(int j = 0; j < p; j++){
+          double phi = zmean(j)+umean(j)/pho;
+          arma::vec xx(4, fill::zeros);
+          xx(0) = sign(phi)*min(lambda, max(0.0, abs(phi)-lambda/(pho*K)));
+          xx(1) = sign(phi)*min(a*lambda, max(lambda, (pho*K*(a-1)*abs(phi)-a*lambda)/(pho*K*(a-1)-1)));
+          xx(2) = sign(phi)*max(a*lambda, abs(phi));
+          arma::vec h(4, fill::zeros);
+          for(int i = 0; i < 4; i++){
+            h(i) = 0.5*(xx(i)-phi)*(xx(i)-phi)+gscad(xx(i), lambda, a)/(pho*K); 
+          }
+          beta(j) = xx(h.index_min());
+        }
       }
     }
     auto finish_reduce = std::chrono::high_resolution_clock::now();
